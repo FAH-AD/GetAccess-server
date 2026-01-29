@@ -4,14 +4,10 @@
  */
 
 import 'dotenv/config';
-import { readFileSync } from 'fs';
-import path from 'path';
-import { fileURLToPath } from 'url';
 import express from 'express';
 import cors from 'cors';
 import { google } from 'googleapis';
 
-const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const app = express();
 const PORT = process.env.PORT ?? 3001;
 
@@ -27,11 +23,8 @@ app.use(express.json());
 // -----------------------------------------------------------------------------
 
 /**
- * Load Service Account key from env.
- * Use either:
- *   - GOOGLE_SERVICE_ACCOUNT_FILE: path to key JSON (relative to server/ or absolute)
- *   - GOOGLE_SERVICE_ACCOUNT_JSON: full key JSON as string
- * Also requires GOOGLE_SHEET_ID.
+ * Load Service Account key from .env.
+ * Requires GOOGLE_SHEET_ID and GOOGLE_SERVICE_ACCOUNT_JSON (minified JSON string).
  */
 function loadServiceAccountKey() {
   const sheetId = process.env.GOOGLE_SHEET_ID;
@@ -39,27 +32,9 @@ function loadServiceAccountKey() {
     throw new Error('GOOGLE_SHEET_ID is missing');
   }
 
-  const filePath = process.env.GOOGLE_SERVICE_ACCOUNT_FILE;
-  if (filePath?.trim()) {
-    const resolved = path.isAbsolute(filePath)
-      ? filePath
-      : path.join(__dirname, filePath);
-    try {
-      const raw = readFileSync(resolved, 'utf8');
-      return { key: JSON.parse(raw), sheetId };
-    } catch (e) {
-      if (e.code === 'ENOENT') {
-        throw new Error(`GOOGLE_SERVICE_ACCOUNT_FILE not found: ${filePath}`);
-      }
-      throw new Error('GOOGLE_SERVICE_ACCOUNT_FILE is invalid JSON');
-    }
-  }
-
   const raw = process.env.GOOGLE_SERVICE_ACCOUNT_JSON;
   if (!raw?.trim()) {
-    throw new Error(
-      'Set GOOGLE_SERVICE_ACCOUNT_FILE (path to key JSON) or GOOGLE_SERVICE_ACCOUNT_JSON (JSON string)'
-    );
+    throw new Error('GOOGLE_SERVICE_ACCOUNT_JSON is missing in .env');
   }
   try {
     return { key: JSON.parse(raw), sheetId };
