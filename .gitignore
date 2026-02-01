@@ -4,3 +4,4 @@ node_modules
 
 # Google Service Account key (contains secrets — never commit)
 central-binder-479709-n5-7a596915bb86.json
+*-credentials.json
